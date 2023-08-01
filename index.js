@@ -105,6 +105,7 @@ app.post("/api/persons", (request, response) => {
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: "unknown endpoint" });
 };
+console.log("Sdsdssdsdsddgi");
 
 app.use(unknownEndpoint);
 
