@@ -1,9 +1,14 @@
+require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
+const mongoose = require("mongoose");
 
 const app = express();
+const Person = require("./models/person");
+
 morgan.token("body", (req, res) => JSON.stringify(req.body));
+
 app.use(
   morgan(
     ":method :url :status :response-time ms - :res[content-length] :body - :req[content-length]"
@@ -50,20 +55,26 @@ app.get("/info", (request, response) => {
 });
 
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  Person.find({}).then((persons) => {
+    response.json(persons);
+  });
 });
 
 app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const person = persons.find((person) => person.id === id);
-
-  if (person) {
+  Person.findById(request.params.id).then((person) => {
     response.json(person);
-  } else {
-    response.status(404).end();
-  }
-  console.log(person);
-  response.json(person);
+  });
+
+  // const id = Number(request.params.id);
+  // const person = persons.find((person) => person.id === id);
+
+  // if (person) {
+  //   response.json(person);
+  // } else {
+  //   response.status(404).end();
+  // }
+  // console.log(person);
+  // response.json(person);
 });
 
 app.delete("/api/persons/:id", (request, response) => {
@@ -73,35 +84,32 @@ app.delete("/api/persons/:id", (request, response) => {
   response.status(204).end();
 });
 
-const generateId = () => {
-  const maxId = persons.length > 0 ? Math.max(...persons.map((n) => n.id)) : 0;
-  return maxId + 1;
-};
+// const generateId = () => {
+//   const maxId = persons.length > 0 ? Math.max(...persons.map((n) => n.id)) : 0;
+//   return maxId + 1;
+// };
 
 app.post("/api/persons", (request, response) => {
   const body = request.body;
   console.log(body);
 
-  if (!body.name || !body.number) {
-    return response.status(400).json({
-      error: "content missing",
-    });
-  }
-  if (persons.find((person) => person.name === body.name)) {
-    return response.status(403).json({
-      error: "name must be unique",
-    });
-  }
-
-  const person = {
-    id: generateId(),
+  // if (!body.name || !body.number) {
+  //   return response.status(400).json({
+  //     error: "content missing",
+  //   });
+  // }
+  // if (persons.find((person) => person.name === body.name)) {
+  //   return response.status(403).json({
+  //     error: "name must be unique",
+  //   });
+  // }
+  const person = new Person({
     name: body.name,
     number: body.number,
-  };
-
-  persons = persons.concat(person);
-
-  response.json(person);
+  });
+  person.save().then((savedContact) => {
+    response.json(savedContact);
+  });
 });
 
 const unknownEndpoint = (request, response) => {
